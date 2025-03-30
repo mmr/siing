@@ -1,28 +1,23 @@
-#ifndef _LOGIC_H_
-#define _LOGIC_H_
+#ifndef GAME_LOGIC_H
+#define GAME_LOGIC_H
 
 #include <gccore.h>
-
-// Game state structure
-typedef struct {
-    int score;
-    int level;
-    float points_per_frame;
-    int next_level_score;
-    // Add more state variables as needed
-} game_state_t;
+#include "modes.h"
 
 // Game logic structure
 typedef struct {
-    game_state_t state;
-    // Add more logic variables as needed
+    bool initialized;
+    void *data;
 } game_logic_t;
 
 // Function declarations
-void game_logic_init(void);
-void game_logic_update(void);
-void game_logic_handle_input(void);
-void game_logic_draw(void);
-void game_logic_cleanup(void);
+int game_logic_init(game_state_t *state);
+int game_logic_update(game_state_t *state);
+int game_logic_handle_input(game_state_t *state);
+int game_logic_draw(game_state_t *state);
+int game_logic_cleanup(game_state_t *state);
 
-#endif /* _LOGIC_H_ */ 
+// Helper functions
+bool game_logic_is_initialized(game_logic_t *logic);
+
+#endif // GAME_LOGIC_H 

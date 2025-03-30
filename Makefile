@@ -119,4 +119,18 @@ package: $(DOL)
 	@echo "Package created in package/apps/siing/"
 	@echo "Copy the contents of package/apps/siing to your SD card at /apps/siing/"
 
+# Deploy target for copying to SD card
+.PHONY: deploy
+deploy: package
+	@echo "Deploying to SD card..."
+	@if [ -d "D:/apps" ]; then \
+		rm -rf "D:/apps/siing"; \
+		mkdir -p "D:/apps/siing"; \
+		cp package/apps/siing/* "D:/apps/siing/"; \
+		echo "Successfully deployed to D:/apps/siing/"; \
+	else \
+		echo "Error: D:/apps directory not found. Please make sure your SD card is mounted at D: and has an apps directory."; \
+		exit 1; \
+	fi
+
 .PHONY: all clean build_dirs debug 

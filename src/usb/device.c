@@ -1,71 +1,93 @@
 #include "device.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define MAX_DEVICES 4
-static usb_device_t devices[MAX_DEVICES];
-static int device_count = 0;
+// Maximum number of supported USB devices
+#define MAX_USB_DEVICES 4
+#define MAX_USB_DEVICE_ENTRIES 8
 
-int usb_init_device(usb_device_t *device) {
-    if (!device) return -1;
+// Device state structure
+typedef struct {
+    bool connected;
+    s32 fd;
+    u16 vid;
+    u16 pid;
+} usb_device_state_t;
+
+// Global device states
+static usb_device_state_t devices[MAX_USB_DEVICES];
+
+bool usb_device_init(void) {
+    // Initialize USB subsystem
+    if (USB_Initialize() < 0) {
+        return false;
+    }
     
-    switch (device->type) {
-        case DEVICE_TYPE_GUITAR:
-            return guitar_init(device);
-        case DEVICE_TYPE_DRUMS:
-            return drums_init(device);
-        case DEVICE_TYPE_MICROPHONE:
-            return microphone_init(device);
-        default:
-            return -1;
+    // Clear device states
+    memset(devices, 0, sizeof(devices));
+    return true;
+}
+
+void usb_device_scan(void) {
+    // Get list of connected devices
+    usb_device_entry entries[MAX_USB_DEVICE_ENTRIES];
+    u8 count = 0;
+    
+    if (USB_GetDeviceList(entries, MAX_USB_DEVICE_ENTRIES, 0, &count) < 0) {
+        return;
+    }
+    
+    // Update device states
+    for (int i = 0; i < MAX_USB_DEVICES && i < count; i++) {
+        usb_device_state_t *dev = &devices[i];
+        usb_device_entry *entry = &entries[i];
+        
+        // Check if device is already connected
+        if (!dev->connected) {
+            // Try to open device
+            s32 fd;
+            if (USB_OpenDevice(entry->device_id, entry->vid, entry->pid, &fd) >= 0) {
+                dev->connected = true;
+                dev->fd = fd;
+                dev->vid = entry->vid;
+                dev->pid = entry->pid;
+            }
+        }
     }
 }
 
-int usb_detect_devices(void) {
-    // Reset device count
-    device_count = 0;
-    
-    // Scan USB bus for devices
-    // TODO: Implement USB device scanning
-    
-    return device_count;
-}
-
-int usb_handle_input(usb_device_t *device) {
-    if (!device) return -1;
-    
-    // Read input data from device
-    // TODO: Implement device-specific input handling
-    
-    return 0;
-}
-
-int usb_cleanup_device(usb_device_t *device) {
-    if (!device) return -1;
-    
-    // Free device-specific data
-    if (device->data) {
-        free(device->data);
+void usb_device_close(void) {
+    // Close all open devices
+    for (int i = 0; i < MAX_USB_DEVICES; i++) {
+        usb_device_state_t *dev = &devices[i];
+        if (dev->connected) {
+            USB_CloseDevice(&dev->fd);
+            dev->connected = false;
+        }
     }
     
-    // Reset device structure
-    memset(device, 0, sizeof(usb_device_t));
+    // Shutdown USB subsystem
+    USB_Deinitialize();
+}
+
+bool usb_device_is_connected(int device_id) {
+    if (device_id < 0 || device_id >= MAX_USB_DEVICES) {
+        return false;
+    }
+    return devices[device_id].connected;
+}
+
+bool usb_device_get_input(int device_id, void *data, int size) {
+    if (!data || size <= 0 || device_id < 0 || device_id >= MAX_USB_DEVICES) {
+        return false;
+    }
     
-    return 0;
-}
-
-// Device-specific implementations
-int guitar_init(usb_device_t *device) {
-    // TODO: Implement guitar initialization
-    return 0;
-}
-
-int drums_init(usb_device_t *device) {
-    // TODO: Implement drums initialization
-    return 0;
-}
-
-int microphone_init(usb_device_t *device) {
-    // TODO: Implement microphone initialization
-    return 0;
+    usb_device_state_t *dev = &devices[device_id];
+    if (!dev->connected) {
+        return false;
+    }
+    
+    // Read data from device
+    return USB_ReadIntrMsg(dev->fd, 0x81, size, data) >= 0;
 } 

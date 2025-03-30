@@ -8,10 +8,13 @@
 #include <ogc/consol.h>
 #include <ogc/audio.h>
 #include <ogc/usb.h>
+#include <ogc/usbstorage.h>
+
 #include "audio/audio.h"
 #include "game/modes.h"
 #include "game/logic.h"
 #include "ui/menu.h"
+#include "usb/device.h"
 
 // Global state
 static game_state_t game_state;
@@ -63,7 +66,9 @@ static void init_system(void) {
     CON_Init(0, 20, 20, 640, 480, 640*VI_DISPLAY_PIX_SZ);
 
     // Initialize USB for instruments
-    USB_Initialize();
+    if (!usb_device_init()) {
+        printf("Failed to initialize USB subsystem\n");
+    }
     
     // Set up video
     GXRModeObj *rmode = VIDEO_GetPreferredMode(NULL);
@@ -85,8 +90,8 @@ static void init_system(void) {
 
 static void init_audio(void) {
     // Initialize audio system
-    ASND_Init();
-    ASND_Pause(0);
+    AUDIO_Init(NULL);
+    AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
 }
 
 static void init_game(void) {
@@ -104,7 +109,7 @@ static void init_game(void) {
 static void main_loop(void) {
     while (running) {
         // Handle USB events
-        USB_ScanInputDevices();
+        usb_device_scan();
         
         // Update game state
         game_mode_update(&game_state);
@@ -126,15 +131,13 @@ static void cleanup(void) {
     menu_cleanup();
     
     // Cleanup audio
-    ASND_Pause(1);
-    ASND_End();
+    AUDIO_StopDMA();
     
     // Cleanup video
     VIDEO_SetBlack(TRUE);
     VIDEO_Flush();
     VIDEO_WaitVSync();
-    VIDEO_Shutdown();
     
     // Cleanup USB
-    USB_Deinitialize();
+    usb_device_close();
 } 

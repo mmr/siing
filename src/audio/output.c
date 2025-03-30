@@ -23,7 +23,8 @@ int audio_output_init(audio_output_t *output) {
     if (!output->buffer) return -1;
     
     // Initialize audio system
-    ASND_Init();
+    AUDIO_Init(NULL);
+    AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
     
     return 0;
 }
@@ -42,6 +43,7 @@ int audio_output_stop(audio_output_t *output) {
     
     // Stop audio output
     output->is_playing = false;
+    AUDIO_StopDMA();
     
     return 0;
 }
@@ -75,12 +77,12 @@ int audio_output_cleanup(audio_output_t *output) {
 // Helper functions
 void audio_output_set_volume(audio_output_t *output, u8 volume) {
     if (!output) return;
-    // TODO: Implement volume control
+    // TODO: Implement volume control using AUDIO_SetVolume
 }
 
 void audio_output_set_pan(audio_output_t *output, s8 pan) {
     if (!output) return;
-    // TODO: Implement pan control
+    // TODO: Implement pan control using AUDIO_SetPan
 }
 
 bool audio_output_is_playing(audio_output_t *output) {

@@ -1,5 +1,5 @@
-#ifndef _USB_DEVICE_H_
-#define _USB_DEVICE_H_
+#ifndef USB_DEVICE_H
+#define USB_DEVICE_H
 
 #include <gccore.h>
 #include <ogc/usb.h>
@@ -33,4 +33,19 @@ int guitar_init(usb_device_t *device);
 int drums_init(usb_device_t *device);
 int microphone_init(usb_device_t *device);
 
-#endif /* _USB_DEVICE_H_ */ 
+// Initialize USB subsystem
+bool usb_device_init(void);
+
+// Scan for connected USB devices
+void usb_device_scan(void);
+
+// Close USB subsystem
+void usb_device_close(void);
+
+// Check if a specific device is connected
+bool usb_device_is_connected(int device_id);
+
+// Get device input data
+bool usb_device_get_input(int device_id, void *data, int size);
+
+#endif // USB_DEVICE_H 

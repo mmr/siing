@@ -1,8 +1,7 @@
-#ifndef _AUDIO_INPUT_H_
-#define _AUDIO_INPUT_H_
+#ifndef AUDIO_INPUT_H
+#define AUDIO_INPUT_H
 
 #include <gccore.h>
-#include <ogc/audio.h>
 
 // Audio input types
 typedef enum {
@@ -16,10 +15,12 @@ typedef enum {
 typedef struct {
     audio_input_type_t type;
     u32 sample_rate;
-    u32 channels;
+    u8 channels;
     u32 buffer_size;
-    void *buffer;
-    void *callback_data;
+    s16 *buffer;
+    bool is_recording;
+    void (*callback)(s16 *data, u32 size, void *user_data);
+    void *user_data;
 } audio_input_t;
 
 // Function declarations
@@ -29,7 +30,9 @@ int audio_input_stop(audio_input_t *input);
 int audio_input_process(audio_input_t *input);
 int audio_input_cleanup(audio_input_t *input);
 
-// Callback function type
-typedef void (*audio_input_callback_t)(void *data, void *buffer, u32 size);
+// Helper functions
+void audio_input_set_callback(audio_input_t *input, void (*callback)(s16 *data, u32 size, void *user_data), void *user_data);
+bool audio_input_is_recording(audio_input_t *input);
+audio_input_type_t audio_input_get_type(audio_input_t *input);
 
-#endif /* _AUDIO_INPUT_H_ */ 
+#endif // AUDIO_INPUT_H 

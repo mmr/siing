@@ -6,6 +6,7 @@
 #include <ogc/gx.h>
 #include <ogc/video.h>
 #include <ogc/consol.h>
+#include <wiiuse/wpad.h>
 #include "menu.h"
 
 // Menu state
@@ -18,10 +19,14 @@ static menu_colors_t menu_colors = {
     .title = 0xFFFF00FF        // Yellow
 };
 
+// Font texture
+static GXTexObj font_texture;
+static u8 font_data[256 * 16];  // Simple 8x16 font data
+
 // Helper functions
 static void draw_rect(int x, int y, int w, int h, u32 color) {
     GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
-    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
     
     GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
     GX_Position2s16(x, y);
@@ -36,13 +41,67 @@ static void draw_rect(int x, int y, int w, int h, u32 color) {
 }
 
 static void draw_text(const char *text, int x, int y, u32 color) {
-    CON_Printf(x, y, "%s", text);
+    // Convert color to RGBA components
+    u8 r = (color >> 24) & 0xFF;
+    u8 g = (color >> 16) & 0xFF;
+    u8 b = (color >> 8) & 0xFF;
+    u8 a = color & 0xFF;
+    
+    // Set up GX for text rendering
+    GX_LoadTexObj(&font_texture, GX_TEXMAP0);
+    GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+    
+    // Draw each character
+    for (int i = 0; text[i]; i++) {
+        char c = text[i];
+        int char_x = x + (i * 8);
+        
+        // Draw character quad
+        GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
+        GX_Position2s16(char_x, y);
+        GX_Color4u8(r, g, b, a);
+        GX_TexCoord2f32((c * 8.0f) / 256.0f, 0.0f);
+        
+        GX_Position2s16(char_x + 8, y);
+        GX_Color4u8(r, g, b, a);
+        GX_TexCoord2f32(((c + 1) * 8.0f) / 256.0f, 0.0f);
+        
+        GX_Position2s16(char_x + 8, y + 16);
+        GX_Color4u8(r, g, b, a);
+        GX_TexCoord2f32(((c + 1) * 8.0f) / 256.0f, 1.0f);
+        
+        GX_Position2s16(char_x, y + 16);
+        GX_Color4u8(r, g, b, a);
+        GX_TexCoord2f32((c * 8.0f) / 256.0f, 1.0f);
+        GX_End();
+    }
 }
 
 void menu_init(void) {
     memset(&current_menu, 0, sizeof(current_menu));
     current_menu.active = true;
     current_menu.selected_item = 0;
+    
+    // Initialize GX for text rendering
+    GX_ClearVtxDesc();
+    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+    
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_S16, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+    
+    GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
+    GX_SetAlphaUpdate(GX_TRUE);
+    GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+    
+    // Initialize font texture
+    memset(font_data, 0, sizeof(font_data));  // Clear font data
+    GX_InitTexObj(&font_texture, font_data, 256, 16, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+    GX_LoadTexObj(&font_texture, GX_TEXMAP0);
 }
 
 void menu_add_item(const char *text, menu_callback_t callback) {
@@ -67,18 +126,20 @@ void menu_draw(void) {
     
     // Draw title
     if (current_menu.title[0]) {
-        draw_text(current_menu.title, 320 - strlen(current_menu.title) * 4, 50, menu_colors.title);
+        int title_x = (640 - strlen(current_menu.title) * 8) / 2;
+        draw_text(current_menu.title, title_x, 50, menu_colors.title);
     }
     
     // Draw items
     for (int i = 0; i < current_menu.item_count; i++) {
         menu_item_t *item = &current_menu.items[i];
-        int y = 150 + i * 30;
+        int y = 150 + i * MENU_ITEM_HEIGHT;
         u32 color = item->enabled ? 
             (i == current_menu.selected_item ? menu_colors.selected : menu_colors.text) :
             menu_colors.disabled;
         
-        draw_text(item->text, 320 - strlen(item->text) * 4, y, color);
+        int item_x = (640 - strlen(item->text) * 8) / 2;
+        draw_text(item->text, item_x, y, color);
     }
 }
 

@@ -1,0 +1,59 @@
+# Build directories
+build/
+bin/
+obj/
+*.o
+*.obj
+*.elf
+*.dol
+*.map
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Wii specific files
+*.wad
+*.wbfs
+*.iso
+*.dol
+*.elf
+*.map
+
+# Debug files
+*.dSYM/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Log files
+*.log
+logs/
+debug.log
+
+# Dependencies
+vendor/
+lib/
+libs/
+
+# Generated files
+*.generated.*
+*.gen.* 

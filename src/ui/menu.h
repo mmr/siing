@@ -2,8 +2,11 @@
 #define _MENU_H_
 
 #include <gccore.h>
+#include <wiiuse/wpad.h>
 
 #define MAX_MENU_ITEMS 10
+#define MAX_MENU_TEXT_LENGTH 64
+#define MAX_MENU_TITLE_LENGTH 128
 #define MENU_ITEM_HEIGHT 30
 #define MENU_PADDING 20
 #define MENU_FONT_SIZE 24
@@ -13,21 +16,18 @@ typedef void (*menu_callback_t)(void);
 
 // Menu item structure
 typedef struct {
-    char *text;
+    char text[MAX_MENU_TEXT_LENGTH];
     menu_callback_t callback;
-    bool is_selected;
-    bool is_enabled;
+    bool enabled;
 } menu_item_t;
 
 // Menu structure
 typedef struct {
-    char *title;
+    char title[MAX_MENU_TITLE_LENGTH];
     menu_item_t items[MAX_MENU_ITEMS];
     int item_count;
     int selected_item;
-    int visible_start;
-    int visible_count;
-    bool is_active;
+    bool active;
 } menu_t;
 
 // Menu colors

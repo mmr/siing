@@ -1,5 +1,5 @@
 # Overview
-This is a Nintendo Wii game. It is meant to be used as a free style way to have fun with the peripherals such as the rock band guitar, drums, logitech usb Microphone. It is not a commercial game. It will be deployed using the Homebrew Browser or directly by saving the WAD file in an SD card and loaded with Wii Flow or other loader.
+Siing is a Nintendo Wii game that allows you to have fun with peripherals such as rock band's guitar, drums, and logitech usb Microphone. Siing is deployed using the Homebrew Browser or directly by saving the WAD file in an SD card and loaded with Wii Flow or any other loader.
 
 # Implementation Instructions
 

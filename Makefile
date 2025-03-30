@@ -42,7 +42,7 @@ INCLUDES = -I$(DEVKITPPC)/include \
           -Isrc
 
 # Libraries
-LIBS = -L$(DEVKITPPC)/lib -logc -lm
+LIBS = -L$(DEVKITPRO)/libogc/lib/wii -logc -lm
 
 # Source files
 SOURCES = $(wildcard src/*.c) \

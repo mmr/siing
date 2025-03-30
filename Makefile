@@ -103,4 +103,20 @@ debug:
 	@echo "Object files: $(OBJECTS)"
 	@echo "PATH: $(PATH)"
 
+# Package target for SD card installation
+.PHONY: package
+package: $(DOL)
+	@echo "Creating package for SD card installation..."
+	@mkdir -p package/apps/siing
+	@cp $(TARGET) package/apps/siing/boot.elf
+	@cp $(DOL) package/apps/siing/boot.dol
+	@cp meta.xml package/apps/siing/
+	@if [ -f icon.png ]; then \
+		cp icon.png package/apps/siing/; \
+	else \
+		echo "Warning: icon.png not found. Please create a 128x128 PNG icon file."; \
+	fi
+	@echo "Package created in package/apps/siing/"
+	@echo "Copy the contents of package/apps/siing to your SD card at /apps/siing/"
+
 .PHONY: all clean build_dirs debug 

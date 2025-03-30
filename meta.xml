@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app>
+    <name>Siing!!</name>
+    <coder>mmr</coder>
+    <version>1.0</version>
+    <release_date>20250330</release_date>
+    <short_description>Music game for Wii with USB peripherals</short_description>
+    <long_description>Siing!! is a music game that lets you play with various USB peripherals like Rock Band guitars, drums, and USB microphones. Features include:
+- Support for Rock Band Guitar
+- Support for Rock Band Drums
+- Support for USB Microphone
+- Free Play Mode
+- Practice Mode
+- Real-time audio feedback</long_description>
+    <category>game</category>
+    <url>https://github.com/mmr77/siing</url>
+</app> 

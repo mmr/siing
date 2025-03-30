@@ -16,6 +16,8 @@
 #include "ui/menu.h"
 #include "usb/device.h"
 
+#define DEFAULT_FIFO_SIZE (256*1024)
+
 // Global state
 static game_state_t game_state;
 static bool running = true;
@@ -86,6 +88,41 @@ static void init_system(void) {
     VIDEO_Flush();
     VIDEO_WaitVSync();
     if(rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
+
+    // Initialize GX
+    void *gp_fifo = memalign(32, DEFAULT_FIFO_SIZE);
+    GX_Init(gp_fifo, DEFAULT_FIFO_SIZE);
+    
+    // Set up viewport
+    GX_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
+    GX_SetScissor(0, 0, rmode->fbWidth, rmode->efbHeight);
+    
+    // Set up projection matrix
+    Mtx44 perspective;
+    guPerspective(perspective, 45, (f32)rmode->fbWidth/(f32)rmode->efbHeight, 0.1F, 300.0F);
+    GX_LoadProjectionMtx(perspective, GX_PERSPECTIVE);
+    
+    // Set up model view matrix
+    Mtx modelview;
+    guMtxIdentity(modelview);
+    GX_LoadPosMtxImm(modelview, GX_PNMTX0);
+    
+    // Set up GX state
+    GX_SetCullMode(GX_CULL_NONE);
+    GX_ClearVtxDesc();
+    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+    GX_SetNumChans(1);
+    GX_SetNumTexGens(1);
+    GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+    GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_SET);
+    GX_SetColorUpdate(GX_TRUE);
+    GX_SetAlphaUpdate(GX_TRUE);
+    GX_SetDstAlpha(GX_TRUE, 0xFF);
 }
 
 static void init_audio(void) {
@@ -114,9 +151,17 @@ static void main_loop(void) {
         // Update game state
         game_mode_update(&game_state);
         
+        // Begin frame
+        GX_ClearVtxDesc();
+        GX_InvVtxCache();
+        
         // Draw frame
         VIDEO_WaitVSync();
         game_mode_draw(&game_state);
+        
+        // End frame
+        GX_DrawDone();
+        VIDEO_Flush();
         
         // Check for exit condition
         if (!game_mode_is_running(&game_state)) {
@@ -132,6 +177,10 @@ static void cleanup(void) {
     
     // Cleanup audio
     AUDIO_StopDMA();
+    
+    // Cleanup GX
+    GX_AbortFrame();
+    GX_Flush();
     
     // Cleanup video
     VIDEO_SetBlack(TRUE);

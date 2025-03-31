@@ -75,45 +75,29 @@ int main(int argc, char **argv) {
 			printf("Controller Type: %d\n", wpad_data->exp.type);
 		}
 
-        if (wpad_data) {
-            // Print newly pressed buttons
-            if (wpad_data->btns_d) {
-                printf("Newly pressed buttons: ");
-                if (wpad_data->btns_d & WPAD_BUTTON_1) printf("1 ");
-                if (wpad_data->btns_d & WPAD_BUTTON_2) printf("2 ");
-                if (wpad_data->btns_d & WPAD_BUTTON_A) printf("A ");
-                if (wpad_data->btns_d & WPAD_BUTTON_B) printf("B ");
-                if (wpad_data->btns_d & WPAD_BUTTON_PLUS) printf("+ ");
-                if (wpad_data->btns_d & WPAD_BUTTON_MINUS) printf("- ");
-                if (wpad_data->btns_d & WPAD_BUTTON_HOME) printf("HOME ");
-                printf("\n");
+        if (wpad_data && wpad_data->exp.type == EXP_GUITAR_HERO_3) {
+            // Get the drum pad states
+            u32 drum_pads = wpad_data->btns_d;
+
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_RED) {  // Red pad
+                MP3Player_PlayBuffer(drums_red_mp3, drums_red_mp3_size, NULL);
+            }
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_YELLOW) {  // Yellow pad
+                MP3Player_PlayBuffer(drums_yellow_mp3, drums_yellow_mp3_size, NULL);
+            }
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_BLUE) {  // Blue pad
+                MP3Player_PlayBuffer(drums_blue_mp3, drums_blue_mp3_size, NULL);
+            }
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_GREEN) {  // Green pad
+                MP3Player_PlayBuffer(drums_green_mp3, drums_green_mp3_size, NULL);
+            }
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_ORANGE) {  // Orange pad
+                MP3Player_PlayBuffer(drums_orange_mp3, drums_orange_mp3_size, NULL);
+            }
+            if (drum_pads & WPAD_GUITAR_HERO_3_BUTTON_MINUS) {  // Kick pedal
+                MP3Player_PlayBuffer(drums_kick_mp3, drums_kick_mp3_size, NULL);
             }
         }
-
-
-		// if (wpad_data) {
-		// 	// Get the drum pad states
-		// 	u32 drum_pads = wpad_data->btns_d;
-
-        //     if (drum_pads & WPAD_BUTTON_1) {  // Red pad
-        //         MP3Player_PlayBuffer(drums_red_mp3, drums_red_mp3_size, NULL);
-        //     }
-        //     if (drum_pads & WPAD_BUTTON_2) {  // Yellow pad
-        //         MP3Player_PlayBuffer(drums_yellow_mp3, drums_yellow_mp3_size, NULL);
-        //     }
-        //     if (drum_pads & WPAD_BUTTON_A) {  // Blue pad
-        //         MP3Player_PlayBuffer(drums_blue_mp3, drums_blue_mp3_size, NULL);
-        //     }
-        //     if (drum_pads & WPAD_BUTTON_B) {  // Green pad
-        //         MP3Player_PlayBuffer(drums_green_mp3, drums_green_mp3_size, NULL);
-        //     }
-        //     if (drum_pads & WPAD_BUTTON_PLUS) {  // Orange pad
-        //         MP3Player_PlayBuffer(drums_orange_mp3, drums_orange_mp3_size, NULL);
-        //     }
-        //     if (drum_pads & WPAD_BUTTON_MINUS) {  // Kick pedal
-        //         MP3Player_PlayBuffer(drums_kick_mp3, drums_kick_mp3_size, NULL);
-        //     }
-		// }
 
 		// We return to the launcher application via exit
 		if (wpad_data && (wpad_data->btns_d & WPAD_BUTTON_HOME)) {
@@ -122,7 +106,6 @@ int main(int argc, char **argv) {
 
 		// Wait for the next frame
 		VIDEO_WaitVSync();
-        usleep(1000000);
 	}
 
 	return 0;
